@@ -1,0 +1,55 @@
+{
+  "name": "textannotationsystem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "umi dev",
+    "build": "umi build",
+    "eslint": "eslint --ext .js --ext .jsx ./src",
+    "lint-staged": "lint-staged"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cbd/eslint": "^0.0.60",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-prettier": "^3.5.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.12.4",
+    "pre-commit": "^1.2.2",
+    "cross-env": "^5.2.0",
+    "lint-staged": "^8.1.0"
+  },
+  "dependencies": {
+    "@cbd/fetch-web": "^0.3.1",
+    "@cbd/header": "^0.2.54",
+    "@cbd/layout": "^0.1.113",
+    "@cbd/theme": "^0.2.53",
+    "@cbd/umirc-dva": "^0.2.54",
+    "@cbd/utils": "^0.2.53",
+    "antd": "^3.12.3",
+    "classnames": "^2.2.6",
+    "dva": "^2.4.1",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-router-dom": "^4.3.1",
+    "umi": "^2.4.3",
+    "umi-plugin-react": "^1.4.1"
+  },
+  "prettier": {
+    "trailingComma": true
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "git add"
+    ]
+  },
+  "pre-commit": [
+    "lint-staged"
+  ]
+}
