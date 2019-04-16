@@ -48,6 +48,7 @@ class BaseLayout extends Component {
       },
       headerOptions: {
         username,
+        showBreadcrumb: false,
       },
     };
 

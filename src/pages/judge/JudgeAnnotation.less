@@ -1,0 +1,180 @@
+.root {
+  display: flex;
+  font-size: 22px;
+  color: #000;
+  background-color: #fff;
+  padding: 24px 32px;
+  border-radius: 4px;
+  height: 98%;
+  .sidebar {
+    flex: 0 0 260px;
+    width: 260px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #54606e;
+    color: #fff;
+    z-index: 30;
+    font-size: 14px;
+    section {
+      padding: 20px 17.5px 20px 17.5px;
+      &:not(:last-child) {
+        border-bottom: 1px solid #384451;
+      }
+      .subtitle {
+        color: #fff;
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .subitem {
+        display: flex;
+        text-align: right;
+        line-height: 1.5;
+        justify-content: space-between;
+        .key {
+          color: #b9b9b9;
+          font-size: 14px;
+          font-weight: bold;
+          margin-right: 10px;
+          progress {
+            width: 180px;
+            height: 10px;
+          }
+        }
+      }
+    }
+  }
+  .right {
+    flex: 1 1 100%;
+    position: relative;
+    max-width: 100%;
+    background: #f6f6f6;
+    overflow-y: auto;
+    line-height: 1.5;
+    .container {
+      flex: 1;
+      padding: 0;
+      margin: 40px auto 150px auto;
+      display: flex;
+      position: relative;
+      flex-wrap: wrap;
+      max-width: 675px;
+      background: #fff;
+      border: 1px solid #ddd;
+      box-shadow: 1px 1px 5px #ddd;
+      min-height: 100px;
+      align-content: space-between;
+      border-radius: 0;
+      flex-direction: row;
+      .content {
+        width: 100%;
+        .entities {
+          min-height: 100px;
+          display: flex;
+          text-align: left;
+          color: #fff;
+          width: 100%;
+          padding: 15px 20px;
+          font-size: 20px;
+          background: #583fcf;
+          box-sizing: border-box;
+          font-weight: bold;
+          border-top-left-radius: 0;
+          border-top-right-radius: 0;
+          :global {
+            .ant-radio-button-wrapper {
+              &::before {
+                background-color: transparent;
+              }
+              margin: 5px;
+              border: 1px solid;
+              cursor: pointer;
+              padding: 1px 10px;
+              position: relative;
+              border-radius: 4px;
+              color: #fff;
+              font-size: 18px;
+              border-color: #fff;
+              background: #583fcf;
+            }
+            .ant-radio-button-wrapper-checked {
+              color: #583fcf;
+              background: #fff;
+            }
+          }
+        }
+        .text {
+          width: 100%;
+          font-size: 20px;
+          word-wrap: break-word;
+          white-space: pre-wrap;
+          padding: 20px;
+          line-height: 2;
+          .highlight {
+            color: inherit;
+            margin: 0 3px;
+            display: inline;
+            padding: 5px 8px;
+            background: #ffe184;
+            font-weight: bold;
+            line-height: 1;
+            -webkit-box-decoration-break: clone;
+            cursor: pointer;
+            position: relative;
+            .entitiesType {
+              color: #583fcf;
+              font-size: 16px;
+              font-weight: bold;
+              margin-left: 8px;
+              vertical-align: middle;
+            }
+          }
+          .normal {
+            background: #fff;
+            .entitiesType {
+              display: none;
+            }
+          }
+        }
+      }
+      .meta {
+        color: #6e6e6e;
+        padding: 3px 10px;
+        font-size: 12px;
+        background: #f6f6f6;
+        text-align: right;
+        margin-left: auto;
+        border-top-left-radius: 10px;
+        border-bottom-right-radius: 0;
+      }
+    }
+    .footer {
+      width: 100%;
+      bottom: 0;
+      outline: 0;
+      position: absolute;
+      display: flex;
+      flex-wrap: nowrap;
+      min-height: 80px;
+      align-items: flex-start;
+      flex-direction: row;
+      justify-content: center;
+      & > * {
+        border-width: 1px !important;
+        border-style: solid;
+        border-color: #fff;
+      }
+      button {
+        margin: 1px;
+        color: #fff !important;
+        width: 80px;
+        height: 80px;
+        cursor: pointer;
+        display: inline-block;
+        border-radius: 0;
+        -webkit-appearance: none;
+      }
+    }
+  }
+}
