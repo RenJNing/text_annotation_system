@@ -30,7 +30,7 @@ class ConnectionCrudModal extends Component {
             <Divider type="vertical" />
             <Popconfirm
               title="确认删除?"
-              onConfirm={() => this.handleDelete(record.id)}
+              onConfirm={() => this.handleDelete(record.connectionId)}
             >
               <a>删除</a>
             </Popconfirm>
@@ -40,14 +40,19 @@ class ConnectionCrudModal extends Component {
     ];
   }
 
-  handleDelete = id => {
-    const {
-      dispatch,
-      manualAnnotationDetail: { connectionCategories = [] } = {},
-    } = this.props;
+  handleDelete = connectionId => {
+    const { dispatch, manualAnnotationDetail: { projectId } = {} } = this.props;
     dispatch({
-      type: "manualAnnotationDetail/saveConnectionsList",
-      payload: connectionCategories.filter(item => item.id !== id),
+      type: "manualAnnotationDetail/deleteConnection",
+      payload: connectionId,
+    }).then(errCode => {
+      if (!errCode) {
+        // 获取关系集列表
+        dispatch({
+          type: "manualAnnotationDetail/queryConnectionsList",
+          payload: projectId,
+        });
+      }
     });
   };
 
@@ -63,7 +68,7 @@ class ConnectionCrudModal extends Component {
       dispatch,
       visible,
       onCancel,
-      manualAnnotationDetail: { connectionCategories = [] } = {},
+      manualAnnotationDetail: { connectionCategories = [], projectId } = {},
       form: { getFieldDecorator, validateFields },
     } = this.props;
     const formItemLayout = {
@@ -85,7 +90,7 @@ class ConnectionCrudModal extends Component {
         onCancel={onCancel}
       >
         <Button
-          size="small"
+          type="primary"
           onClick={() => {
             this.setState({ visible: true });
           }}
@@ -95,11 +100,11 @@ class ConnectionCrudModal extends Component {
         <Table
           columns={this.columns}
           dataSource={connectionCategories}
-          rowKey={record => record.id}
+          rowKey={record => record.connectionId}
         />
         <Modal
           title={
-            this.state.connectionData && this.state.connectionData.id
+            this.state.connectionData && this.state.connectionData.connectionId
               ? "编辑关系"
               : "新增关系"
           }
@@ -109,31 +114,44 @@ class ConnectionCrudModal extends Component {
               if (errors) {
                 return;
               }
-              const temp = JSON.parse(JSON.stringify(connectionCategories));
-              if (this.state.connectionData && this.state.connectionData.id) {
+              if (
+                this.state.connectionData &&
+                this.state.connectionData.connectionId
+              ) {
                 //编辑
                 dispatch({
-                  type: "manualAnnotationDetail/saveConnectionsList",
-                  payload: temp.map(item => {
-                    if (item.id === this.state.connectionData.id) {
-                      return {
-                        ...item,
-                        ...values,
-                      };
-                    } else {
-                      return item;
-                    }
-                  }),
+                  type: "manualAnnotationDetail/updateConnection",
+                  payload: {
+                    connectionId: this.state.connectionData.connectionId,
+                    text: values.text,
+                  },
+                }).then(errCode => {
+                  if (!errCode) {
+                    // 获取关系集列表
+                    dispatch({
+                      type: "manualAnnotationDetail/queryConnectionsList",
+                      payload: projectId,
+                    });
+                  }
                 });
               } else {
                 // 新增
-                temp.push({
-                  ...values,
-                  id: Math.random() * 100,
-                });
                 dispatch({
-                  type: "manualAnnotationDetail/saveConnectionsList",
-                  payload: temp,
+                  type: "manualAnnotationDetail/addConnection",
+                  payload: {
+                    projectId,
+                    connection: {
+                      text: values.text,
+                    },
+                  },
+                }).then(errCode => {
+                  if (!errCode) {
+                    // 获取关系集列表
+                    dispatch({
+                      type: "manualAnnotationDetail/queryConnectionsList",
+                      payload: projectId,
+                    });
+                  }
                 });
               }
               this.setState({ visible: false, connectionData: {} });

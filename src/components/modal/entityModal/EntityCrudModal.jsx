@@ -22,6 +22,14 @@ class EntityCrudModal extends Component {
         dataIndex: "text",
       },
       {
+        title: "color",
+        dataIndex: "color",
+      },
+      {
+        title: "bordercolor",
+        dataIndex: "bordercolor",
+      },
+      {
         title: "操作",
         key: "action",
         width: 120,
@@ -31,7 +39,7 @@ class EntityCrudModal extends Component {
             <Divider type="vertical" />
             <Popconfirm
               title="确认删除?"
-              onConfirm={() => this.handleDelete(record.id)}
+              onConfirm={() => this.handleDelete(record.labelId)}
             >
               <a>删除</a>
             </Popconfirm>
@@ -41,14 +49,19 @@ class EntityCrudModal extends Component {
     ];
   }
 
-  handleDelete = id => {
-    const {
-      dispatch,
-      manualAnnotationDetail: { labelCategories = [] } = {},
-    } = this.props;
+  handleDelete = labelId => {
+    const { dispatch, manualAnnotationDetail: { projectId } = {} } = this.props;
     dispatch({
-      type: "manualAnnotationDetail/saveLabelsList",
-      payload: labelCategories.filter(item => item.id !== id),
+      type: "manualAnnotationDetail/deleteLabel",
+      payload: labelId,
+    }).then(errCode => {
+      if (!errCode) {
+        // 获取实体集列表
+        dispatch({
+          type: "manualAnnotationDetail/queryLabelsList",
+          payload: projectId,
+        });
+      }
     });
   };
 
@@ -64,7 +77,7 @@ class EntityCrudModal extends Component {
       dispatch,
       visible,
       onCancel,
-      manualAnnotationDetail: { labelCategories = [] } = {},
+      manualAnnotationDetail: { labelCategories = [], projectId } = {},
       form: { getFieldDecorator, validateFields },
     } = this.props;
     const formItemLayout = {
@@ -86,7 +99,7 @@ class EntityCrudModal extends Component {
         onCancel={onCancel}
       >
         <Button
-          size="small"
+          type="primary"
           onClick={() => {
             this.setState({ visible: true });
           }}
@@ -96,11 +109,11 @@ class EntityCrudModal extends Component {
         <Table
           columns={this.columns}
           dataSource={labelCategories}
-          rowKey={record => record.id}
+          rowKey={record => record.labelId}
         />
         <Modal
           title={
-            this.state.entityData && this.state.entityData.id
+            this.state.entityData && this.state.entityData.labelId
               ? "编辑实体"
               : "新增实体"
           }
@@ -110,33 +123,45 @@ class EntityCrudModal extends Component {
               if (errors) {
                 return;
               }
-              const temp = JSON.parse(JSON.stringify(labelCategories));
-              if (this.state.entityData && this.state.entityData.id) {
+              if (this.state.entityData && this.state.entityData.labelId) {
                 //编辑
                 dispatch({
-                  type: "manualAnnotationDetail/saveLabelsList",
-                  payload: temp.map(item => {
-                    if (item.id === this.state.entityData.id) {
-                      return {
-                        ...item,
-                        ...values,
-                      };
-                    } else {
-                      return item;
-                    }
-                  }),
+                  type: "manualAnnotationDetail/updateLabel",
+                  payload: {
+                    labelId: this.state.entityData.labelId,
+                    text: values.text,
+                    color: values.color,
+                    bordercolor: values.bordercolor,
+                  },
+                }).then(errCode => {
+                  if (!errCode) {
+                    // 获取实体集列表
+                    dispatch({
+                      type: "manualAnnotationDetail/queryLabelsList",
+                      payload: projectId,
+                    });
+                  }
                 });
               } else {
                 // 新增
-                temp.push({
-                  ...values,
-                  id: Math.random() * 100,
-                  color: randomColor(),
-                  borderColor: randomColor(),
-                });
                 dispatch({
-                  type: "manualAnnotationDetail/saveLabelsList",
-                  payload: temp,
+                  type: "manualAnnotationDetail/addLabel",
+                  payload: {
+                    projectId,
+                    label: {
+                      text: values.text,
+                      color: randomColor(),
+                      bordercolor: randomColor(),
+                    },
+                  },
+                }).then(errCode => {
+                  if (!errCode) {
+                    // 获取实体集列表
+                    dispatch({
+                      type: "manualAnnotationDetail/queryLabelsList",
+                      payload: projectId,
+                    });
+                  }
                 });
               }
               this.setState({ visible: false, entityData: {} });
@@ -153,6 +178,24 @@ class EntityCrudModal extends Component {
               initialValue: this.state.entityData && this.state.entityData.text,
             })(<Input />)}
           </FormItem>
+          {this.state.entityData && this.state.entityData.labelId && (
+            <React.Fragment>
+              <FormItem label="color" {...formItemLayout}>
+                {getFieldDecorator("color", {
+                  rules: [{ required: true, message: "color不能为空!" }],
+                  initialValue:
+                    this.state.entityData && this.state.entityData.color,
+                })(<Input />)}
+              </FormItem>
+              <FormItem label="bordercolor" {...formItemLayout}>
+                {getFieldDecorator("bordercolor", {
+                  rules: [{ required: true, message: "bordercolor不能为空!" }],
+                  initialValue:
+                    this.state.entityData && this.state.entityData.bordercolor,
+                })(<Input />)}
+              </FormItem>
+            </React.Fragment>
+          )}
         </Modal>
       </Modal>
     );

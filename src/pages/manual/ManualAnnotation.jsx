@@ -1,58 +1,72 @@
 import React, { Component } from "react";
 import { connect } from "dva";
-import { Annotator, Action } from "poplar-annotation";
-import { List, Radio, Tooltip, Button } from "antd";
+import { Annotator, Action } from "poplar";
+import { List, Radio, Tooltip, Button, Checkbox } from "antd";
 import { equals } from "@cbd/utils";
 import EntityCrudModal from "../../components/modal/entityModal/EntityCrudModal";
 import ConnectionModal from "../../components/modal/connectionModal/ConnectionModal";
 import ConnectionCrudModal from "../../components/modal/connectionModal/ConnectionCrudModal";
 import styles from "./ManualAnnotation.less";
+import ProjectModal from "../../components/modal/projectModal/ProjectModal";
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
 }))
 class ManualAnnotation extends Component {
   state = {
-    selectedLabelCategoryId: 0,
-    sentenceId: undefined,
+    selectedLabelCategoryId: null,
+    sentenceId: 0,
     EntityCrudModalVisible: false,
+    ProjectModalVisible: false,
   };
 
   componentDidMount() {
     this.init();
   }
 
-  init = () => {
-    const { dispatch } = this.props;
-    // 获取句子列表
-    dispatch({ type: "manualAnnotationDetail/querySentencesList" }).then(
-      (sentencesList = []) => {
-        this.annotationInit(sentencesList[0]);
-      }
-    );
-    // 获取实体集列表
-    dispatch({ type: "manualAnnotationDetail/queryLabelsList" });
-    // 获取关系集列表
-    dispatch({ type: "manualAnnotationDetail/queryConnectionsList" });
-  };
+  init = () => {};
 
   // 初始化标注区域
-  annotationInit = (sentenceObj = {}) => {
+  annotationInit = async (sentenceObj = {}) => {
     const {
+      dispatch,
       manualAnnotationDetail: {
         labelCategories = [],
         connectionCategories = [],
+        projectId,
       } = {},
     } = this.props;
-    const { mark = {}, sentence = "", id } = sentenceObj;
-    this.setState({ sentenceId: id });
+    this.annotator && this.annotator.remove();
+    const { content = "", sentenceId } = sentenceObj;
+    this.setState({ sentenceId });
+    const { labels = [], connections = [] } = await dispatch({
+      type: "manualAnnotationDetail/queryAnnotation",
+      payload: { projectId, sentenceId },
+    });
     const originString = {
-      content: sentence,
-      labelCategories,
-      labels: [],
-      connectionCategories,
-      connections: [],
-      ...mark,
+      content,
+      labelCategories: labelCategories.map(item => ({
+        id: item.labelId,
+        borderColor: item.bordercolor,
+        text: item.text,
+        color: item.color,
+      })),
+      labels: labels.map(item => ({
+        id: item.labelId,
+        categoryId: item.categoryId,
+        startIndex: item.startIndex,
+        endIndex: item.endIndex,
+      })),
+      connectionCategories: connectionCategories.map(item => ({
+        id: item.connectionId,
+        text: item.text,
+      })),
+      connections: connections.map(item => ({
+        id: item.connectionlId,
+        categoryId: item.categoryId,
+        fromId: item.fromId,
+        toId: item.toId,
+      })),
     };
     this.annotator = new Annotator(
       originString,
@@ -63,9 +77,11 @@ class ManualAnnotation extends Component {
     this.annotator.on("textSelected", (startIndex, endIndex) => {
       // 获取用户想要添加的LabelCategoryId
       const { selectedLabelCategoryId } = this.state;
-      this.annotator.applyAction(
-        Action.Label.Create(selectedLabelCategoryId, startIndex, endIndex)
-      );
+      if (selectedLabelCategoryId) {
+        this.annotator.applyAction(
+          Action.Label.Create(selectedLabelCategoryId, startIndex, endIndex)
+        );
+      }
     });
     // Label 删除
     this.annotator.on("labelRightClicked", (id, x, y) => {
@@ -104,7 +120,12 @@ class ManualAnnotation extends Component {
     if (!equals(prevLabelCategories, labelCategories)) {
       (labelCategories || []).forEach(item => {
         if (this.annotator) {
-          this.annotator.store.labelCategoryRepo.add(item);
+          this.annotator.store.labelCategoryRepo.add({
+            id: item.labelId,
+            borderColor: item.bordercolor,
+            text: item.text,
+            color: item.color,
+          });
         }
       });
     }
@@ -112,7 +133,10 @@ class ManualAnnotation extends Component {
     if (!equals(prevConnectionCategories, connectionCategories)) {
       (connectionCategories || []).forEach(item => {
         if (this.annotator) {
-          this.annotator.store.connectionCategoryRepo.add(item);
+          this.annotator.store.connectionCategoryRepo.add({
+            id: item.connectionId,
+            text: item.text,
+          });
         }
       });
     }
@@ -121,26 +145,52 @@ class ManualAnnotation extends Component {
   render() {
     const {
       dispatch,
-      manualAnnotationDetail: { sentencesList = [], labelCategories = [] } = {},
+      manualAnnotationDetail: {
+        projectId,
+        projectName,
+        sentencesList = [],
+        labelCategories = [],
+      } = {},
     } = this.props;
     const {
       EntityCrudModalVisible,
       ConnectionCrudModalVisible,
       ConnectionModalVisible,
+      sentenceId,
+      ProjectModalVisible,
     } = this.state;
     return (
       <div className={styles.root}>
         <div className={styles.sidebar}>
           <section>
-            <h3 className={styles.subtitle}>项目信息</h3>
-            <div className={styles.subitem}>
+            <ProjectModal
+              visible={ProjectModalVisible}
+              onCancel={() => {
+                this.setState({ ProjectModalVisible: false });
+              }}
+              annotationInit={sentenceObj => {
+                this.annotationInit(sentenceObj);
+              }}
+            />
+            <h3 className={styles.subtitle}>
+              项目信息
+              <Button
+                type="primary"
+                onClick={() => {
+                  this.setState({ ProjectModalVisible: true });
+                }}
+              >
+                选择项目
+              </Button>
+            </h3>
+            <div className={`${styles.subitem} ${styles.margin}`}>
               <div className={styles.key}>文件名</div>
-              prodigy_demo
+              {projectName}
             </div>
-            <div className={styles.subitem}>
+            <div className={`${styles.subitem} ${styles.margin}`}>
               <div className={styles.key}>实体集</div>
               <Button
-                size="small"
+                type="primary"
                 onClick={() => {
                   this.setState({ EntityCrudModalVisible: true });
                 }}
@@ -154,10 +204,10 @@ class ManualAnnotation extends Component {
                 }}
               />
             </div>
-            <div className={styles.subitem}>
+            <div className={`${styles.subitem} ${styles.margin}`}>
               <div className={styles.key}>关系集</div>
               <Button
-                size="small"
+                type="primary"
                 onClick={() => {
                   this.setState({ ConnectionCrudModalVisible: true });
                 }}
@@ -186,11 +236,20 @@ class ManualAnnotation extends Component {
                 }}
               />
             </div>
+            <div className={`${styles.subitem} ${styles.margin}`}>
+              <div className={styles.key}>导出数据</div>
+              <Button type="primary">
+                <a href={`/api/manual/exportProject?projectId=${projectId}`}>
+                  .txt
+                </a>
+              </Button>
+            </div>
           </section>
           <section>
             <h3 className={styles.subtitle}>进度</h3>
             <div className={styles.subitem}>
-              <div className={styles.key}>已标注</div>0
+              <div className={styles.key}>已标注</div>
+              {sentencesList.filter(item => item.labeled).length}
             </div>
             <div className={styles.subitem}>
               <div className={styles.key}>总共</div>
@@ -198,26 +257,47 @@ class ManualAnnotation extends Component {
             </div>
             <div className={styles.subitem}>
               <div className={styles.key}>
-                <progress value={(1 / sentencesList.length) * 100} max="100" />
+                <progress
+                  value={
+                    (sentencesList.filter(item => item.labeled).length /
+                      sentencesList.length) *
+                    100
+                  }
+                  max="100"
+                />
               </div>
-              {(1 / sentencesList.length) * 100}%
+              {(
+                (sentencesList.filter(item => item.labeled).length /
+                  sentencesList.length) *
+                100
+              ).toFixed(1)}
+              %
             </div>
           </section>
           <section>
             <h3 className={styles.subtitle}>句子列表</h3>
             <List
               dataSource={sentencesList}
-              renderItem={item => (
-                <Tooltip title={item.sentence}>
-                  <List.Item
-                    onClick={() => {
-                      this.annotator.remove();
-                      this.annotationInit(item);
-                    }}
-                  >
-                    {`${item.id}.${item.sentence}`}
-                  </List.Item>
-                </Tooltip>
+              renderItem={(item, index) => (
+                <div className={styles.subitem}>
+                  <Tooltip placement="left" title={item.content}>
+                    <List.Item
+                      onClick={() => {
+                        this.annotator && this.annotator.remove();
+                        this.annotationInit(item);
+                      }}
+                    >
+                      {`${index + 1}.${item.content}`}
+                    </List.Item>
+                  </Tooltip>
+                  {!(item.id < sentenceId - 1 || item.id > sentenceId + 1) && (
+                    <Checkbox
+                      onChange={e => {
+                        console.log(`${item.id} = ${e.target.checked}`);
+                      }}
+                    />
+                  )}
+                </div>
               )}
             />
           </section>
@@ -227,14 +307,13 @@ class ManualAnnotation extends Component {
             <div className={styles.content}>
               <div className={styles.entities}>
                 <Radio.Group
-                  defaultValue={0}
                   buttonStyle="solid"
                   onChange={e => {
                     this.setState({ selectedLabelCategoryId: e.target.value });
                   }}
                 >
                   {(labelCategories || []).map(item => (
-                    <Radio.Button value={item.id} key={item.id}>
+                    <Radio.Button value={item.labelId} key={item.labelId}>
                       {item.text}
                     </Radio.Button>
                   ))}
@@ -253,13 +332,34 @@ class ManualAnnotation extends Component {
             <button
               style={{ background: "#4fd364" }}
               onClick={() => {
+                const {
+                  labels = [],
+                  connections = [],
+                } = this.annotator.store.json;
                 dispatch({
-                  type: "manualAnnotationDetail/saveSentencesList",
-                  payload: sentencesList.map(item =>
-                    item.id === this.state.sentenceId
-                      ? { ...item, mark: this.annotator.store.json }
-                      : item
-                  ),
+                  type: "manualAnnotationDetail/saveAnnotation",
+                  payload: {
+                    projectId,
+                    sentenceId,
+                    labels,
+                    connections: connections,
+                  },
+                }).then(errCode => {
+                  if (!errCode) {
+                    dispatch({
+                      type: "manualAnnotationDetail/querySentencesList",
+                      payload: projectId,
+                    }).then(res => {
+                      if (res) {
+                        this.annotationInit(
+                          res.find(
+                            item =>
+                              !item.labeled && item.sentenceId !== sentenceId
+                          )
+                        );
+                      }
+                    });
+                  }
                 });
               }}
             >

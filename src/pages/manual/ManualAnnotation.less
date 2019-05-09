@@ -25,6 +25,9 @@
         font-size: 16px;
         font-weight: bold;
         margin-bottom: 10px;
+        :global(.ant-btn) {
+          float: right;
+        }
       }
       .subitem {
         display: flex;
@@ -42,7 +45,13 @@
           }
         }
       }
+      .margin {
+        margin: 10px 0;
+      }
       :global {
+        .ant-checkbox-wrapper {
+          padding: 5px 0;
+        }
         .ant-list-item {
           cursor: pointer;
           overflow: hidden;

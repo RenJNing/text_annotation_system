@@ -45,7 +45,11 @@ class ConnectionModal extends Component {
           })(
             <RadioGroup>
               {(connectionCategories || []).map(item => (
-                <Radio style={radioStyle} value={item.id} key={item.id}>
+                <Radio
+                  style={radioStyle}
+                  value={item.connectionId}
+                  key={item.connectionId}
+                >
                   {item.text}
                 </Radio>
               ))}
