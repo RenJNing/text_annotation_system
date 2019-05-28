@@ -1,13 +1,13 @@
 import React, { Component } from "react";
 import { connect } from "dva";
-import { Annotator, Action } from "poplar";
-import { List, Radio, Tooltip, Button, Checkbox } from "antd";
+import { Annotator, Action } from "poplar-annotation";
+import { List, Radio, Tooltip, Button } from "antd";
 import { equals } from "@cbd/utils";
 import EntityCrudModal from "../../components/modal/entityModal/EntityCrudModal";
 import ConnectionModal from "../../components/modal/connectionModal/ConnectionModal";
 import ConnectionCrudModal from "../../components/modal/connectionModal/ConnectionCrudModal";
-import styles from "./ManualAnnotation.less";
 import ProjectModal from "../../components/modal/projectModal/ProjectModal";
+import styles from "./ManualAnnotation.less";
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
@@ -239,8 +239,13 @@ class ManualAnnotation extends Component {
             <div className={`${styles.subitem} ${styles.margin}`}>
               <div className={styles.key}>导出数据</div>
               <Button type="primary">
-                <a href={`/api/manual/exportProject?projectId=${projectId}`}>
+                <a href={`/api/manual/exportTxt?projectId=${projectId}`}>
                   .txt
+                </a>
+              </Button>
+              <Button type="primary">
+                <a href={`/api/manual/exportCsv?projectId=${projectId}`}>
+                  .csv
                 </a>
               </Button>
             </div>
@@ -290,13 +295,6 @@ class ManualAnnotation extends Component {
                       {`${index + 1}.${item.content}`}
                     </List.Item>
                   </Tooltip>
-                  {!(item.id < sentenceId - 1 || item.id > sentenceId + 1) && (
-                    <Checkbox
-                      onChange={e => {
-                        console.log(`${item.id} = ${e.target.checked}`);
-                      }}
-                    />
-                  )}
                 </div>
               )}
             />
@@ -342,7 +340,7 @@ class ManualAnnotation extends Component {
                     projectId,
                     sentenceId,
                     labels,
-                    connections: connections,
+                    connections,
                   },
                 }).then(errCode => {
                   if (!errCode) {

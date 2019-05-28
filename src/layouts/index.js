@@ -28,10 +28,10 @@ class BaseLayout extends Component {
   };
 
   render() {
-    const { children, publicData, location } = this.props;
+    const { children, publicData, location, dispatch, history } = this.props;
     const { username } = publicData;
 
-    if (location.pathname === "/") {
+    if (location.pathname === "/login") {
       return children;
     }
 
@@ -49,6 +49,13 @@ class BaseLayout extends Component {
       headerOptions: {
         username,
         showBreadcrumb: false,
+        onLogout: () => {
+          dispatch({ type: "public/logout" }).then(errCode => {
+            if (errCode === 0) {
+              history.push("/login");
+            }
+          });
+        },
       },
     };
 

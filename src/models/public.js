@@ -1,29 +1,27 @@
+import { login, logout } from "../services/public";
+
 export default {
   namespace: "public",
-  // subscriptions: {
-  //   // ({ dispatch, history }, done)
-  //   setup({ dispatch, history }) {
-  //     return history.listen(({ pathname, query }) => {
-  //       console.log("---", pathname);
-  //       // if (pathname === '/users') {
-  //       //   dispatch({ type: 'fetch', payload: query });
-  //       // }
-  //     });
-  //   },
-  // },
   state: {
-    username: "张三",
+    username: "Unknown",
+    role: "",
   },
   effects: {
-    // * testEffect(_, { put }) {
-    //   /* put方法触发一个reducer */
-    //   yield put({ type: "testReducer", test: true });
-    // },
+    *login({ payload }, { call, put }) {
+      const { data = {}, errCode } = yield call(login, payload);
+      yield put({ type: "save/loginInfo", payload: data });
+      return errCode;
+    },
+    *logout({ payload }, { call }) {
+      const { errCode } = yield call(logout);
+      return errCode;
+    },
   },
   reducers: {
-    "save/username": (state, payload) => ({
+    "save/loginInfo": (state, { payload: { userName, role } = {} }) => ({
       ...state,
-      username: payload,
+      username: userName,
+      role,
     }),
   },
 };

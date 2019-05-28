@@ -25,16 +25,17 @@ class ProjectModal extends Component {
           <span>
             <a
               onClick={async () => {
-                // 获取实体集列表
-                await props.dispatch({
-                  type: "manualAnnotationDetail/queryLabelsList",
-                  payload: record.projectId,
-                });
-                // 获取关系集列表
-                await props.dispatch({
-                  type: "manualAnnotationDetail/queryConnectionsList",
-                  payload: record.projectId,
-                });
+                // 并行处理多个异步结果：获取实体集列表、获取关系集列表
+                await Promise.all([
+                  props.dispatch({
+                    type: "manualAnnotationDetail/queryLabelsList",
+                    payload: record.projectId,
+                  }),
+                  props.dispatch({
+                    type: "manualAnnotationDetail/queryConnectionsList",
+                    payload: record.projectId,
+                  }),
+                ]);
                 props.dispatch({
                   type: "manualAnnotationDetail/saveProjectInfo",
                   payload: { projectId: record.projectId, name: record.name },
