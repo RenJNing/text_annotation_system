@@ -20,46 +20,22 @@ class ManualAnnotation extends Component {
     ProjectModalVisible: false,
   };
 
-  componentDidMount() {
-    this.init();
-  }
-
-  init = () => {};
-
-  // 初始化标注区域
-  annotationInit = async (sentenceObj = {}) => {
-    const {
-      dispatch,
-      manualAnnotationDetail: {
-        labelCategories = [],
-        connectionCategories = [],
-        projectId,
-      } = {},
-    } = this.props;
-    this.annotator && this.annotator.remove();
+  // 读取标注数据 并 初始化标注区域
+  loadAnnotator = async (sentenceObj = {}) => {
+    const { dispatch, manualAnnotationDetail: { projectId } = {} } = this.props;
     const { content = "", sentenceId } = sentenceObj;
     this.setState({ sentenceId });
     const { labels = [], connections = [] } = await dispatch({
       type: "manualAnnotationDetail/queryAnnotation",
       payload: { projectId, sentenceId },
     });
-    const originString = {
+    this.initAnnotator({
       content,
-      labelCategories: labelCategories.map(item => ({
-        id: item.labelId,
-        borderColor: item.bordercolor,
-        text: item.text,
-        color: item.color,
-      })),
       labels: labels.map(item => ({
         id: item.labelId,
         categoryId: item.categoryId,
         startIndex: item.startIndex,
         endIndex: item.endIndex,
-      })),
-      connectionCategories: connectionCategories.map(item => ({
-        id: item.connectionId,
-        text: item.text,
       })),
       connections: connections.map(item => ({
         id: item.connectionlId,
@@ -67,7 +43,34 @@ class ManualAnnotation extends Component {
         fromId: item.fromId,
         toId: item.toId,
       })),
+    });
+  };
+
+  // 初始化标注区域
+  initAnnotator = (stringObj = {}) => {
+    const {
+      manualAnnotationDetail: {
+        labelCategories = [],
+        connectionCategories = [],
+      } = {},
+    } = this.props;
+    const originString = {
+      content: "",
+      labelCategories: labelCategories.map(item => ({
+        id: item.labelId,
+        borderColor: item.bordercolor,
+        text: item.text,
+        color: item.color,
+      })),
+      labels: [],
+      connectionCategories: connectionCategories.map(item => ({
+        id: item.connectionId,
+        text: item.text,
+      })),
+      connections: [],
+      ...stringObj,
     };
+    this.annotator && this.annotator.remove();
     this.annotator = new Annotator(
       originString,
       document.getElementById("AnnotationArea"),
@@ -93,7 +96,7 @@ class ManualAnnotation extends Component {
       // 获取用户想要添加的ConnectionCategoryId
       this.setState({ ConnectionModalVisible: true, startIndex, endIndex });
       // this.annotator.applyAction(
-      //   Action.Connection.Create(1, startIndex, endIndex)
+      //   Action.Connection.Create(id, startIndex, endIndex)
       // );
     });
     // Connection 删除
@@ -101,6 +104,11 @@ class ManualAnnotation extends Component {
       // 输出用户点击的Connection的ID, 被点击时鼠标的 X,Y 值
       this.annotator.applyAction(Action.Connection.Delete(id));
     });
+  };
+
+  resetAnnotator = (sentenceObj = {}) => {
+    const { content = "" } = sentenceObj;
+    this.initAnnotator({ content });
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -169,7 +177,7 @@ class ManualAnnotation extends Component {
                 this.setState({ ProjectModalVisible: false });
               }}
               annotationInit={sentenceObj => {
-                this.annotationInit(sentenceObj);
+                this.loadAnnotator(sentenceObj);
               }}
             />
             <h3 className={styles.subtitle}>
@@ -289,7 +297,7 @@ class ManualAnnotation extends Component {
                     <List.Item
                       onClick={() => {
                         this.annotator && this.annotator.remove();
-                        this.annotationInit(item);
+                        this.loadAnnotator(item);
                       }}
                     >
                       {`${index + 1}.${item.content}`}
@@ -328,7 +336,6 @@ class ManualAnnotation extends Component {
           </div>
           <footer className={styles.footer}>
             <button
-              style={{ background: "#4fd364" }}
               onClick={() => {
                 const {
                   labels = [],
@@ -349,7 +356,7 @@ class ManualAnnotation extends Component {
                       payload: projectId,
                     }).then(res => {
                       if (res) {
-                        this.annotationInit(
+                        this.loadAnnotator(
                           res.find(
                             item =>
                               !item.labeled && item.sentenceId !== sentenceId
@@ -360,6 +367,7 @@ class ManualAnnotation extends Component {
                   }
                 });
               }}
+              style={{ background: "#4fd364" }}
             >
               <svg
                 aria-hidden="true"
@@ -371,7 +379,13 @@ class ManualAnnotation extends Component {
                 <path d="M9 16.172l10.594-10.594 1.406 1.406-12 12-5.578-5.578 1.406-1.406z" />
               </svg>
             </button>
-            <button style={{ background: "#f74c4a" }}>
+            <button
+              onClick={() => {
+                const { content } = this.annotator.store.json;
+                this.resetAnnotator({ content });
+              }}
+              style={{ background: "#f74c4a" }}
+            >
               <svg
                 aria-hidden="true"
                 fill="currentColor"
