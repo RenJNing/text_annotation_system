@@ -16,5 +16,6 @@ export default [
     key: "3",
     icon: "tool",
     link: "/permission",
+    roleLevel: 3,
   },
 ];

@@ -6,11 +6,13 @@ const FormItem = Form.Item;
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
+  public: stores.public,
 }))
 @Form.create()
 class ConnectionCrudModal extends Component {
   constructor(props) {
     super(props);
+    const { public: { roleLevel } = {} } = props;
     this.state = {
       visible: false,
       connectionData: {},
@@ -20,7 +22,9 @@ class ConnectionCrudModal extends Component {
         title: "关系",
         dataIndex: "text",
       },
-      {
+    ];
+    if (roleLevel >= 3) {
+      this.columns.push({
         title: "操作",
         key: "action",
         width: 120,
@@ -36,8 +40,8 @@ class ConnectionCrudModal extends Component {
             </Popconfirm>
           </span>
         ),
-      },
-    ];
+      });
+    }
   }
 
   handleDelete = connectionId => {
@@ -69,6 +73,7 @@ class ConnectionCrudModal extends Component {
       visible,
       onCancel,
       manualAnnotationDetail: { connectionCategories = [], projectId } = {},
+      public: { roleLevel } = {},
       form: { getFieldDecorator, validateFields },
     } = this.props;
     const formItemLayout = {
@@ -89,14 +94,16 @@ class ConnectionCrudModal extends Component {
         onOk={onCancel}
         onCancel={onCancel}
       >
-        <Button
-          type="primary"
-          onClick={() => {
-            this.setState({ visible: true });
-          }}
-        >
-          新增
-        </Button>
+        {roleLevel >= 3 && (
+          <Button
+            type="primary"
+            onClick={() => {
+              this.setState({ visible: true });
+            }}
+          >
+            新增
+          </Button>
+        )}
         <Table
           columns={this.columns}
           dataSource={connectionCategories}

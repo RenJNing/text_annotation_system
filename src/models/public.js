@@ -4,7 +4,7 @@ export default {
   namespace: "public",
   state: {
     username: "Unknown",
-    role: "",
+    roleLevel: 0,
   },
   effects: {
     *login({ payload }, { call, put }) {
@@ -22,10 +22,26 @@ export default {
     },
   },
   reducers: {
-    "save/loginInfo": (state, { payload: { userName, role } = {} }) => ({
-      ...state,
-      username: userName,
-      role,
-    }),
+    "save/loginInfo": (state, { payload: { userName, role } = {} }) => {
+      let roleLevel;
+      switch (role) {
+        case "guest":
+          roleLevel = 1;
+          break;
+        case "user":
+          roleLevel = 2;
+          break;
+        case "admin":
+          roleLevel = 3;
+          break;
+        default:
+          roleLevel = 0;
+      }
+      return {
+        ...state,
+        username: userName,
+        roleLevel,
+      };
+    },
   },
 };

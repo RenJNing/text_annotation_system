@@ -1,4 +1,4 @@
-import { post } from "@cbd/fetch-web";
+import { post } from "../../../utils/request";
 
 /**
  * User查询

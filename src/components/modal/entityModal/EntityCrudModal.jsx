@@ -7,11 +7,13 @@ const FormItem = Form.Item;
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
+  public: stores.public,
 }))
 @Form.create()
 class EntityCrudModal extends Component {
   constructor(props) {
     super(props);
+    const { public: { roleLevel } = {} } = props;
     this.state = {
       visible: false,
       entityData: {},
@@ -29,7 +31,9 @@ class EntityCrudModal extends Component {
         title: "bordercolor",
         dataIndex: "bordercolor",
       },
-      {
+    ];
+    if (roleLevel >= 3) {
+      this.columns.push({
         title: "操作",
         key: "action",
         width: 120,
@@ -45,8 +49,8 @@ class EntityCrudModal extends Component {
             </Popconfirm>
           </span>
         ),
-      },
-    ];
+      });
+    }
   }
 
   handleDelete = labelId => {
@@ -78,6 +82,7 @@ class EntityCrudModal extends Component {
       visible,
       onCancel,
       manualAnnotationDetail: { labelCategories = [], projectId } = {},
+      public: { roleLevel } = {},
       form: { getFieldDecorator, validateFields },
     } = this.props;
     const formItemLayout = {
@@ -98,14 +103,16 @@ class EntityCrudModal extends Component {
         onOk={onCancel}
         onCancel={onCancel}
       >
-        <Button
-          type="primary"
-          onClick={() => {
-            this.setState({ visible: true });
-          }}
-        >
-          新增
-        </Button>
+        {roleLevel >= 3 && (
+          <Button
+            type="primary"
+            onClick={() => {
+              this.setState({ visible: true });
+            }}
+          >
+            新增
+          </Button>
+        )}
         <Table
           columns={this.columns}
           dataSource={labelCategories}

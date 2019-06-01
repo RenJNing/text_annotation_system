@@ -4,6 +4,7 @@ import { Upload, Modal, Button, Icon, message, Table } from "antd";
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
+  public: stores.public,
 }))
 class ProjectModal extends Component {
   constructor(props) {
@@ -69,6 +70,7 @@ class ProjectModal extends Component {
       visible,
       onCancel,
       manualAnnotationDetail: { projectsList = [] } = {},
+      public: { roleLevel } = {},
       dispatch,
     } = this.props;
     const props = {
@@ -96,12 +98,14 @@ class ProjectModal extends Component {
         onOk={onCancel}
         onCancel={onCancel}
       >
-        <Upload {...props}>
-          <Button>
-            <Icon type="upload" />
-            上传文件
-          </Button>
-        </Upload>
+        {roleLevel >= 2 && (
+          <Upload {...props}>
+            <Button>
+              <Icon type="upload" />
+              上传文件
+            </Button>
+          </Upload>
+        )}
         <Table
           columns={this.columns}
           dataSource={projectsList}

@@ -11,6 +11,7 @@ import styles from "./ManualAnnotation.less";
 
 @connect(stores => ({
   manualAnnotationDetail: stores.manualAnnotationDetail,
+  public: stores.public,
 }))
 class ManualAnnotation extends Component {
   state = {
@@ -53,6 +54,7 @@ class ManualAnnotation extends Component {
         labelCategories = [],
         connectionCategories = [],
       } = {},
+      public: { roleLevel } = {},
     } = this.props;
     const originString = {
       content: "",
@@ -76,34 +78,36 @@ class ManualAnnotation extends Component {
       document.getElementById("AnnotationArea"),
       { allowMultipleLabel: false, maxLineWidth: 30 }
     );
-    // Label 新增
-    this.annotator.on("textSelected", (startIndex, endIndex) => {
-      // 获取用户想要添加的LabelCategoryId
-      const { selectedLabelCategoryId } = this.state;
-      if (selectedLabelCategoryId) {
-        this.annotator.applyAction(
-          Action.Label.Create(selectedLabelCategoryId, startIndex, endIndex)
-        );
-      }
-    });
-    // Label 删除
-    this.annotator.on("labelRightClicked", (id, x, y) => {
-      // 输出用户点击的label的ID, 被点击时鼠标的 X,Y 值
-      this.annotator.applyAction(Action.Label.Delete(id));
-    });
-    // Connection 新增
-    this.annotator.on("twoLabelsClicked", (startIndex, endIndex) => {
-      // 获取用户想要添加的ConnectionCategoryId
-      this.setState({ ConnectionModalVisible: true, startIndex, endIndex });
-      // this.annotator.applyAction(
-      //   Action.Connection.Create(id, startIndex, endIndex)
-      // );
-    });
-    // Connection 删除
-    this.annotator.on("connectionRightClicked", (id, x, y) => {
-      // 输出用户点击的Connection的ID, 被点击时鼠标的 X,Y 值
-      this.annotator.applyAction(Action.Connection.Delete(id));
-    });
+    if (roleLevel >= 2) {
+      // Label 新增
+      this.annotator.on("textSelected", (startIndex, endIndex) => {
+        // 获取用户想要添加的LabelCategoryId
+        const { selectedLabelCategoryId } = this.state;
+        if (selectedLabelCategoryId) {
+          this.annotator.applyAction(
+            Action.Label.Create(selectedLabelCategoryId, startIndex, endIndex)
+          );
+        }
+      });
+      // Label 删除
+      this.annotator.on("labelRightClicked", (id, x, y) => {
+        // 输出用户点击的label的ID, 被点击时鼠标的 X,Y 值
+        this.annotator.applyAction(Action.Label.Delete(id));
+      });
+      // Connection 新增
+      this.annotator.on("twoLabelsClicked", (startIndex, endIndex) => {
+        // 获取用户想要添加的ConnectionCategoryId
+        this.setState({ ConnectionModalVisible: true, startIndex, endIndex });
+        // this.annotator.applyAction(
+        //   Action.Connection.Create(id, startIndex, endIndex)
+        // );
+      });
+      // Connection 删除
+      this.annotator.on("connectionRightClicked", (id, x, y) => {
+        // 输出用户点击的Connection的ID, 被点击时鼠标的 X,Y 值
+        this.annotator.applyAction(Action.Connection.Delete(id));
+      });
+    }
   };
 
   resetAnnotator = (sentenceObj = {}) => {
@@ -159,6 +163,7 @@ class ManualAnnotation extends Component {
         sentencesList = [],
         labelCategories = [],
       } = {},
+      public: { roleLevel } = {},
     } = this.props;
     const {
       EntityCrudModalVisible,
@@ -334,69 +339,71 @@ class ManualAnnotation extends Component {
               </span>
             </div>
           </div>
-          <footer className={styles.footer}>
-            <button
-              onClick={() => {
-                const {
-                  labels = [],
-                  connections = [],
-                } = this.annotator.store.json;
-                dispatch({
-                  type: "manualAnnotationDetail/saveAnnotation",
-                  payload: {
-                    projectId,
-                    sentenceId,
-                    labels,
-                    connections,
-                  },
-                }).then(errCode => {
-                  if (!errCode) {
-                    dispatch({
-                      type: "manualAnnotationDetail/querySentencesList",
-                      payload: projectId,
-                    }).then(res => {
-                      if (res) {
-                        this.loadAnnotator(
-                          res.find(
-                            item =>
-                              !item.labeled && item.sentenceId !== sentenceId
-                          )
-                        );
-                      }
-                    });
-                  }
-                });
-              }}
-              style={{ background: "#4fd364" }}
-            >
-              <svg
-                aria-hidden="true"
-                fill="currentColor"
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
+          {roleLevel >= 2 && (
+            <footer className={styles.footer}>
+              <button
+                onClick={() => {
+                  const {
+                    labels = [],
+                    connections = [],
+                  } = this.annotator.store.json;
+                  dispatch({
+                    type: "manualAnnotationDetail/saveAnnotation",
+                    payload: {
+                      projectId,
+                      sentenceId,
+                      labels,
+                      connections,
+                    },
+                  }).then(errCode => {
+                    if (!errCode) {
+                      dispatch({
+                        type: "manualAnnotationDetail/querySentencesList",
+                        payload: projectId,
+                      }).then(res => {
+                        if (res) {
+                          this.loadAnnotator(
+                            res.find(
+                              item =>
+                                !item.labeled && item.sentenceId !== sentenceId
+                            )
+                          );
+                        }
+                      });
+                    }
+                  });
+                }}
+                style={{ background: "#4fd364" }}
               >
-                <path d="M9 16.172l10.594-10.594 1.406 1.406-12 12-5.578-5.578 1.406-1.406z" />
-              </svg>
-            </button>
-            <button
-              onClick={() => {
-                const { content } = this.annotator.store.json;
-                this.resetAnnotator({ content });
-              }}
-              style={{ background: "#f74c4a" }}
-            >
-              <svg
-                aria-hidden="true"
-                fill="currentColor"
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
+                <svg
+                  aria-hidden="true"
+                  fill="currentColor"
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M9 16.172l10.594-10.594 1.406 1.406-12 12-5.578-5.578 1.406-1.406z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  const { content } = this.annotator.store.json;
+                  this.resetAnnotator({ content });
+                }}
+                style={{ background: "#f74c4a" }}
               >
-                <path d="M18.984 6.422l-5.578 5.578 5.578 5.578-1.406 1.406-5.578-5.578-5.578 5.578-1.406-1.406 5.578-5.578-5.578-5.578 1.406-1.406 5.578 5.578 5.578-5.578z" />
-              </svg>
-            </button>
-          </footer>
+                <svg
+                  aria-hidden="true"
+                  fill="currentColor"
+                  width="40"
+                  height="40"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M18.984 6.422l-5.578 5.578 5.578 5.578-1.406 1.406-5.578-5.578-5.578 5.578-1.406-1.406 5.578-5.578-5.578-5.578 1.406-1.406 5.578 5.578 5.578-5.578z" />
+                </svg>
+              </button>
+            </footer>
+          )}
         </div>
       </div>
     );
