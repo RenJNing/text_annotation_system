@@ -6,15 +6,15 @@ export default [
     link: "/home",
   },
   {
-    title: "手动标注",
+    title: "标注",
     key: "2",
     icon: "form",
     link: "/manual",
   },
   {
-    title: "判断标注",
+    title: "权限控制",
     key: "3",
-    icon: "form",
-    link: "/judge",
+    icon: "tool",
+    link: "/permission",
   },
 ];
