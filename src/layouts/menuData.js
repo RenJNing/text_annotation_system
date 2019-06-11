@@ -1,10 +1,10 @@
 export default [
-  {
-    title: "首页",
-    key: "1",
-    icon: "home",
-    link: "/home",
-  },
+  // {
+  //   title: "首页",
+  //   key: "1",
+  //   icon: "home",
+  //   link: "/home",
+  // },
   {
     title: "标注",
     key: "2",

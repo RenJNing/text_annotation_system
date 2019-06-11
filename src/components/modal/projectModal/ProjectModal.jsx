@@ -13,6 +13,7 @@ class ProjectModal extends Component {
       {
         title: "序号",
         dataIndex: "projectId",
+        render: (text, record, index) => index + 1,
       },
       {
         title: "文件名",
