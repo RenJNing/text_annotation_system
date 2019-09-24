@@ -5,7 +5,7 @@ services:
   - docker
 
 before_install:
-  - npm --registry=http://122.192.9.52:35227 install
+  - npm set registry http://122.192.9.52:35227
 
 script:
   - npm run build
