@@ -29,7 +29,10 @@ class BaseLayout extends Component {
 
   render() {
     const { children, publicData, location, dispatch, history } = this.props;
-    const { username, roleLevel } = publicData;
+    const {
+      username,
+      // roleLevel
+    } = publicData;
 
     if (location.pathname === "/login") {
       return children;
@@ -39,9 +42,10 @@ class BaseLayout extends Component {
       this.localChangeActiveMenu(location.pathname, menuData) || {};
 
     const layoutOptions = {
-      menuData: menuData.filter(
-        item => !item.roleLevel || roleLevel >= item.roleLevel
-      ),
+      menuData,
+      // .filter(
+      //   item => !item.roleLevel || roleLevel >= item.roleLevel
+      // ),
       menuOptions: {
         logoRender: Logo,
         selectedkey: key,
