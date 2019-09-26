@@ -4,6 +4,10 @@ node_js:
 services:
   - docker
 
+cache:
+  directories:
+    - node_modules
+
 before_install:
   - npm set registry http://122.192.9.52:35227
 
@@ -12,3 +16,8 @@ script:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - docker build -t renjning/annotation:latest .
   - docker push renjning/annotation:latest
+
+after_success:
+  - chmod 600 id_rsa
+  - scp -o "StrictHostKeyChecking no" -i id_rsa docker-compose.yml ubuntu@49.234.230.174:/home/ubuntu/docker/
+  - ssh -o "StrictHostKeyChecking no" -i id_rsa ubuntu@49.234.230.174 "cd /home/ubuntu/docker/;sudo docker-compose -f docker-compose.yml pull;sudo docker-compose -f docker-compose.yml up -d;exit"
